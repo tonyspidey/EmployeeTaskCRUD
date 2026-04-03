@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace EmployeeTaskCRUD
 {
-    // Class to handle all employee-related operations such as displing, inserting, updating, and deleting employees
+    // Class to handle all employee-related operations such as displaying, inserting, updating, and deleting employees
     internal class EmployeeDetails
     {
         static SqlConnection con;
@@ -48,9 +50,8 @@ namespace EmployeeTaskCRUD
             }
         }
 
-      
         //  LIST EMPLOYEES MENU
-      
+
         static void ListEmployeesMenu()
         {
             Console.WriteLine("========== LIST EMPLOYEES ==========");
@@ -90,34 +91,34 @@ namespace EmployeeTaskCRUD
             {
                 Console.WriteLine("========== ALL EMPLOYEES ==========");
 
-                // Using stored procedure 
-                SqlCommand cmd = new SqlCommand("usp_Employee_GetByName", con);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
+                using (SqlCommand cmd = new SqlCommand("usp_Employee_GetByName", con))
                 {
-                    Console.WriteLine("EmpID | Name | Department  | JoiningDate | Designation");
-                    Console.WriteLine("----------------------------------------------------------------");
+                    cmd.CommandType = CommandType.StoredProcedure;
 
-                    while (reader.Read())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        int id = Convert.ToInt32(reader["EmpID"]);
-                        string name = reader["EmpName"].ToString();
-                        string dept = reader["Department"].ToString();
-                        string date = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy"); // date only
-                        string desig = reader["Designation"].ToString();
+                        if (reader.HasRows)
+                        {
+                            Console.WriteLine("EmpID | Name | Department  | JoiningDate | Designation");
+                            Console.WriteLine("----------------------------------------------------------------");
 
-                        Console.WriteLine(id + "     | " + name + " | " + dept + "      | " + date + " | " + desig);
+                            while (reader.Read())
+                            {
+                                int id = Convert.ToInt32(reader["EmpID"]);
+                                string name = reader["EmpName"].ToString();
+                                string dept = reader["Department"].ToString();
+                                string date = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
+                                string desig = reader["Designation"].ToString();
+
+                                Console.WriteLine(id + "     | " + name + " | " + dept + "      | " + date + " | " + desig);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("No employees found.");
+                        }
                     }
                 }
-                else
-                {
-                    Console.WriteLine("No employees found.");
-                }
-
-                reader.Close();
             }
             catch (SqlException ex)
             {
@@ -133,7 +134,7 @@ namespace EmployeeTaskCRUD
                 Console.Write("Enter Department name: ");
                 string dept = Console.ReadLine();
 
-                if (dept==null || dept=="")
+                if (dept == null || dept == "")
                 {
                     Console.WriteLine("Department name cannot be empty!");
                     return;
@@ -141,35 +142,35 @@ namespace EmployeeTaskCRUD
 
                 Console.WriteLine("========== EMPLOYEES IN SAME DEPARTMENT ==========");
 
-                // Using stored procedure 
-                SqlCommand cmd = new SqlCommand("usp_Employee_GetByDepartment", con);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@Department", dept);
-
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
+                using (SqlCommand cmd = new SqlCommand("usp_Employee_GetByDepartment", con))
                 {
-                    Console.WriteLine("EmpID | Name | Department  | JoiningDate | Designation");
-                    Console.WriteLine("----------------------------------------------------------------");
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Department", dept);
 
-                    while (reader.Read())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        int id = Convert.ToInt32(reader["EmpID"]);
-                        string name = reader["EmpName"].ToString();
-                        string department = reader["Department"].ToString();
-                        string date = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
-                        string desig = reader["Designation"].ToString();
+                        if (reader.HasRows)
+                        {
+                            Console.WriteLine("EmpID | Name | Department  | JoiningDate | Designation");
+                            Console.WriteLine("----------------------------------------------------------------");
 
-                        Console.WriteLine(id + "     | " + name + " | " + department + "      | " + date + " | " + desig);
+                            while (reader.Read())
+                            {
+                                int id = Convert.ToInt32(reader["EmpID"]);
+                                string name = reader["EmpName"].ToString();
+                                string department = reader["Department"].ToString();
+                                string date = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
+                                string desig = reader["Designation"].ToString();
+
+                                Console.WriteLine(id + "     | " + name + " | " + department + "      | " + date + " | " + desig);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("No employees found in this department.");
+                        }
                     }
                 }
-                else
-                {
-                    Console.WriteLine("No employees found in this department.");
-                }
-
-                reader.Close();
             }
             catch (SqlException ex)
             {
@@ -185,7 +186,7 @@ namespace EmployeeTaskCRUD
                 Console.Write("Enter Designation: ");
                 string desig = Console.ReadLine();
 
-                if (desig==null || desig=="")
+                if (desig == null || desig == "")
                 {
                     Console.WriteLine("Designation cannot be empty!");
                     return;
@@ -193,44 +194,44 @@ namespace EmployeeTaskCRUD
 
                 Console.WriteLine("========== EMPLOYEES IN SAME DESIGNATION ==========");
 
-                // Using stored procedure 
-                SqlCommand cmd = new SqlCommand("usp_Employee_GetByDesignation", con);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@Designation", desig);
-
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
+                using (SqlCommand cmd = new SqlCommand("usp_Employee_GetByDesignation", con))
                 {
-                    Console.WriteLine("EmpID | Name | Department  | JoiningDate | Designation");
-                    Console.WriteLine("----------------------------------------------------------------");
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@Designation", desig);
 
-                    while (reader.Read())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        int id = Convert.ToInt32(reader["EmpID"]);
-                        string name = reader["EmpName"].ToString();
-                        string department = reader["Department"].ToString();
-                        string date = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy"); // date only
-                        string designation = reader["Designation"].ToString();
+                        if (reader.HasRows)
+                        {
+                            Console.WriteLine("EmpID | Name | Department  | JoiningDate | Designation");
+                            Console.WriteLine("----------------------------------------------------------------");
 
-                        Console.WriteLine(id + "     | " + name + " | " + department + "      | " + date + " | " + designation);
+                            while (reader.Read())
+                            {
+                                int id = Convert.ToInt32(reader["EmpID"]);
+                                string name = reader["EmpName"].ToString();
+                                string department = reader["Department"].ToString();
+                                string date = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
+                                string designation = reader["Designation"].ToString();
+
+                                Console.WriteLine(id + "     | " + name + " | " + department + "      | " + date + " | " + designation);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("No employees found with this designation.");
+                        }
                     }
                 }
-                else
-                {
-                    Console.WriteLine("No employees found with this designation.");
-                }
-
-                reader.Close();
             }
             catch (SqlException ex)
             {
                 Console.WriteLine("Database error while searching by designation: " + ex.Message);
             }
         }
- 
+
         //  INSERT EMPLOYEE
-      
+
         static void InsertEmployee()
         {
             try
@@ -271,18 +272,17 @@ namespace EmployeeTaskCRUD
                     Console.WriteLine("Joining date cannot be empty!");
                     return;
                 }
-               
+
                 DateTime joiningDate = DateTime.ParseExact(joiningInput, "dd-MM-yyyy", null);
 
                 if (joiningDate.Date > DateTime.Today)
                 {
-                    Console.WriteLine("Joining date cannot be a greater than current  date ");
+                    Console.WriteLine("Joining date cannot be greater than current date!");
                     return;
                 }
 
                 string sqlDate = joiningDate.Year + "-" + joiningDate.Month + "-" + joiningDate.Day;
 
-                // Using stored procedure 
                 SqlCommand cmd = new SqlCommand("usp_Employee_Insert", con);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@EmpName", name);
@@ -311,9 +311,9 @@ namespace EmployeeTaskCRUD
             }
         }
 
-      
+
         //  UPDATE EMPLOYEE
-       
+
         static void UpdateEmployee()
         {
             try
@@ -367,14 +367,11 @@ namespace EmployeeTaskCRUD
                     return;
                 }
 
-                // Converting dd-MM-yyyy string to DateTime
                 DateTime joiningDate = DateTime.ParseExact(newDate, "dd-MM-yyyy", null);
 
-                // Converting DateTime to SQL format (yyyy-MM-dd)
                 string sqlDate = joiningDate.Year + "-" + joiningDate.Month + "-" + joiningDate.Day;
 
-
-                // Using stored procedure 
+                // Using stored procedure
                 SqlCommand cmd = new SqlCommand("usp_Employee_Update", con);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@EmpID", empId);
@@ -403,10 +400,8 @@ namespace EmployeeTaskCRUD
                 Console.ReadLine();
             }
         }
-
-    
         //  DELETE EMPLOYEE
-      
+
         static void DeleteEmployee()
         {
             try
@@ -416,7 +411,7 @@ namespace EmployeeTaskCRUD
                 Console.Write("Enter EmpID to delete: ");
                 string empInput = Console.ReadLine();
 
-                if (empInput == null || empInput == "")
+                if (string.IsNullOrEmpty(empInput))
                 {
                     Console.WriteLine("EmpID cannot be empty!");
                     return;
@@ -424,28 +419,46 @@ namespace EmployeeTaskCRUD
 
                 int empId = Convert.ToInt32(empInput);
 
-                Console.Write("Are you sure you want to delete EmpID " + empId + "? (y/n): ");
-                string confirm = Console.ReadLine();
-
-                if (confirm != "y" || confirm != "Y")
+                using (SqlCommand fetchCmd = new SqlCommand("usp_Employee_GetByID", con))
                 {
-                    Console.WriteLine("Deletion cancelled.");
-                    return;
-                }
+                    fetchCmd.CommandType = CommandType.StoredProcedure;
+                    fetchCmd.Parameters.AddWithValue("@EmpID", empId);
 
-                // Using stored procedure 
-                SqlCommand cmd = new SqlCommand("usp_Employee_Delete", con);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@EmpID", empId);
+                    using (SqlDataReader reader = fetchCmd.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Close();
 
-                int rowsAffected = cmd.ExecuteNonQuery();
-                if (rowsAffected > 0)
-                {
-                    Console.WriteLine("Employee deleted successfully!");
-                }
-                else
-                {
-                    Console.WriteLine("Employee not found.");
+                            Console.Write("Are you sure you want to delete EmpID " + empId + "? (y/n): ");
+                            string confirm = Console.ReadLine();
+
+                            if (confirm != "y" && confirm != "Y")
+                            {
+                                Console.WriteLine("Deletion cancelled.");
+                                return;
+                            }
+
+                            SqlCommand cmd = new SqlCommand("usp_Employee_Delete", con);
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@EmpID", empId);
+
+                            int rowsAffected = cmd.ExecuteNonQuery();
+
+                            if (rowsAffected > 0)
+                            {
+                                Console.WriteLine("Employee deleted successfully!");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Delete failed.");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Employee not found in database.");
+                        }
+                    }
                 }
             }
             catch (SqlException ex)

@@ -1,9 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace EmployeeTaskCRUD
 {
+    internal class SalaryInfo
+    {
+        public int EmpID = 0;
+        public string Name = "";
+        public string Department = "";
+        public string Designation = "";
+        public string JoiningDate = "";
+        public string SalaryMonth = "";
+        public decimal Basic = 0;
+        public decimal Hra = 0;
+        public decimal Da = 0;
+        public decimal Pf = 0;
+        public decimal Tax = 0;
+        public decimal Gross = 0;
+        public decimal Deduction = 0;
+        public decimal Net = 0;
+    }
+
     internal class SalarySlip
     {
         static SqlConnection con;
@@ -39,6 +59,8 @@ namespace EmployeeTaskCRUD
                 }
             }
         }
+
+       
         static void ViewSalarySlip()
         {
             try
@@ -56,8 +78,8 @@ namespace EmployeeTaskCRUD
 
                 int empId = Convert.ToInt32(empInput);
 
-               //enter only month and year
-                Console.Write("Enter only  month and year for salary slip (MM-yyyy): ");
+              
+                Console.Write("Enter only month and year for salary slip (MM-yyyy): ");
                 string monthInput = Console.ReadLine();
 
                 if (string.IsNullOrEmpty(monthInput))
@@ -68,58 +90,85 @@ namespace EmployeeTaskCRUD
 
                 string fullDate = "28-" + monthInput;
                 DateTime salaryMonth = DateTime.ParseExact(fullDate, "dd-MM-yyyy", null);
-                string sqlDate = salaryMonth.Year + "-"+salaryMonth.Month + "-" + salaryMonth.Day;
 
-                // using stored procedure
-                SqlCommand cmd = new SqlCommand("usp_SalarySlip_GetByEmpID", con);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@EmpID", empId);
-                cmd.Parameters.AddWithValue("@SalaryMonth", sqlDate);
 
-                SqlDataReader reader = cmd.ExecuteReader();
+                string query = "SELECT * FROM vw_SalarySlip WHERE EmpID = @EmpID AND MONTH(SalaryMonth) = @Month AND YEAR(SalaryMonth) = @Year";
 
-                if (!reader.HasRows)
+                using (SqlCommand cmd = new SqlCommand(query, con))
                 {
-                    Console.WriteLine("No salary record found for this employee for the given month.");
-                    reader.Close();
-                    return;
+                    cmd.Parameters.AddWithValue("@EmpID", empId);
+                    cmd.Parameters.AddWithValue("@Month", salaryMonth.Month);
+                    cmd.Parameters.AddWithValue("@Year", salaryMonth.Year);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (!reader.HasRows)
+                        {
+                            Console.WriteLine("No salary record found for this employee for the given month.");
+                            return;
+                        }
+
+                      
+                        List<SalaryInfo> slipList = new List<SalaryInfo>();
+
+                        while (reader.Read())
+                        {
+                            slipList.Add(new SalaryInfo
+                            {
+                                EmpID = Convert.ToInt32(reader["EmpID"]),
+                                Name = reader["EmpName"].ToString(),
+                                Department = reader["Department"].ToString(),
+                                Designation = reader["Designation"].ToString(),
+                                JoiningDate = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy"),
+                                SalaryMonth = Convert.ToDateTime(reader["SalaryMonth"]).ToString("MM-yyyy"),
+                                Basic = Convert.ToDecimal(reader["BasicSalary"]),
+                                Hra = Convert.ToDecimal(reader["Hra"]),
+                                Da = Convert.ToDecimal(reader["Da"]),
+                                Pf = Convert.ToDecimal(reader["Pf"]),
+                                Tax = Convert.ToDecimal(reader["Tax"]),
+                                Gross = Convert.ToDecimal(reader["GrossSalary"]),
+                                Deduction = Convert.ToDecimal(reader["Deduction"]),
+                                Net = Convert.ToDecimal(reader["Net"])
+                            });
+                        }
+
+
+                        var result = from s in slipList
+                                     select s;
+
+                        SalaryInfo slip = null;
+                        foreach (var s in result)
+                        {
+                            if (s.SalaryMonth == salaryMonth.ToString("MM-yyyy"))
+                            {
+                                slip = s;
+                            }
+                        }
+
+                        if (slip == null)
+                        {
+                            Console.WriteLine("No salary record found for this employee for the given month.");
+                            return;
+                        }
+
+                        Console.WriteLine("==================================================");
+                        Console.WriteLine("                  SALARY SLIP                    ");
+                        Console.WriteLine("==================================================");
+                        Console.WriteLine("Employee     : " + slip.Name);
+                        Console.WriteLine("Department   : " + slip.Department);
+                        Console.WriteLine("Designation  : " + slip.Designation);
+                        Console.WriteLine("Joining Date : " + slip.JoiningDate);
+                        Console.WriteLine("Salary Month : " + "28-"+slip.SalaryMonth);
+                        Console.WriteLine("Basic Salary : Rs. " + slip.Basic);
+                        Console.WriteLine("HRA          : Rs. " + slip.Hra);
+                        Console.WriteLine("DA           : Rs. " + slip.Da);
+                        Console.WriteLine("Gross Salary : Rs. " + slip.Gross);
+                        Console.WriteLine("PF           : Rs. " + slip.Pf);
+                        Console.WriteLine("Tax          : Rs. " + slip.Tax);
+                        Console.WriteLine("Deduction    : Rs. " + slip.Deduction);
+                        Console.WriteLine("NET SALARY   : Rs. " + slip.Net);
+                    }
                 }
-
-                reader.Read();
-
-                string empName = reader["EmpName"].ToString();
-                string department = reader["Department"].ToString();
-                string designation = reader["Designation"].ToString();
-                string joinDate = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
-                string salMonth = salaryMonth.ToString("MM-yyyy");
-
-                decimal basicSalary = Convert.ToDecimal(reader["BasicSalary"]);
-                decimal hra = Convert.ToDecimal(reader["Hra"]);
-                decimal da = Convert.ToDecimal(reader["Da"]);
-                decimal pf = Convert.ToDecimal(reader["Pf"]);
-                decimal tax = Convert.ToDecimal(reader["Tax"]);
-                decimal grossSalary = Convert.ToDecimal(reader["GrossSalary"]);
-                decimal deduction = Convert.ToDecimal(reader["Deduction"]);
-                decimal netSalary = Convert.ToDecimal(reader["Net"]);
-
-                reader.Close();
-
-                Console.WriteLine("==================================================");
-                Console.WriteLine("                  SALARY SLIP                    ");
-                Console.WriteLine("==================================================");
-                Console.WriteLine("Employee     : " + empName);
-                Console.WriteLine("Department   : " + department);
-                Console.WriteLine("Designation  : " + designation);
-                Console.WriteLine("Joining Date : " + joinDate);
-                Console.WriteLine("Salary Month : " + salMonth);
-                Console.WriteLine("Basic Salary : Rs. " + basicSalary);
-                Console.WriteLine("HRA          : Rs. " + hra);
-                Console.WriteLine("DA           : Rs. " + da);
-                Console.WriteLine("Gross Salary : Rs. " + grossSalary);
-                Console.WriteLine("PF           : Rs. " + pf);
-                Console.WriteLine("Tax          : Rs. " + tax);
-                Console.WriteLine("Deduction    : Rs. " + deduction);
-                Console.WriteLine("NET SALARY   : Rs. " + netSalary);
             }
             catch (SqlException ex)
             {
@@ -131,6 +180,8 @@ namespace EmployeeTaskCRUD
                 Console.ReadLine();
             }
         }
+
+        // ---- View Salary by Department ----
         static void ViewSalaryByDepartment()
         {
             try
@@ -146,37 +197,53 @@ namespace EmployeeTaskCRUD
                     return;
                 }
 
-                string query = "SELECT e.EmpName, e.Department, e.Designation, e.JoiningDate ,s.BasicSalary, s.GrossSalary, s.Deduction, s.Net FROM Employee e JOIN Salary s ON e.EmpID = s.EmpID WHERE e.Department = @Department";
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@Department", dept);
 
-                SqlDataReader reader = cmd.ExecuteReader();
+                string query = "SELECT * FROM vw_SalaryByDepartment WHERE Department = @Department";
 
-                if (!reader.HasRows)
+                using (SqlCommand cmd = new SqlCommand(query, con))
                 {
-                    Console.WriteLine("No salary records found for this department.");
-                    reader.Close();
-                    return;
+                    cmd.Parameters.AddWithValue("@Department", dept);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (!reader.HasRows)
+                        {
+                            Console.WriteLine("No salary records found for this department.");
+                            return;
+                        }
+
+                        List<SalaryInfo> salaryList = new List<SalaryInfo>();
+
+                        while (reader.Read())
+                        {
+                            salaryList.Add(new SalaryInfo
+                            {
+                                Name = reader["EmpName"].ToString(),
+                                Department = reader["Department"].ToString(),
+                                Designation = reader["Designation"].ToString(),
+                                JoiningDate = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy"),
+                                SalaryMonth = Convert.ToDateTime(reader["SalaryMonth"]).ToString("MM-yyyy"),
+                                Basic = Convert.ToDecimal(reader["BasicSalary"]),
+                                Gross = Convert.ToDecimal(reader["GrossSalary"]),
+                                Deduction = Convert.ToDecimal(reader["Deduction"]),
+                                Net = Convert.ToDecimal(reader["Net"])
+                            });
+                        }
+
+                      
+                        var sortedList = from s in salaryList
+                                         orderby s.Name ascending
+                                         select s;
+
+                        Console.WriteLine("Name       | Department  | Designation  | JoiningDate  | SalaryMonth  | Basic Pay    | Gross Pay    | Deduction    | Net Pay");
+                        Console.WriteLine("---------------------------------------------------------------------------------------------------------------------------------");
+
+                        foreach (var emp in sortedList)
+                        {
+                            Console.WriteLine(emp.Name  +"\t"+  " | " + emp.Department  +"\t"+   " | " + emp.Designation   +"\t" +  " | " + emp.JoiningDate   +"\t" +  " | " + " 28-" + emp.SalaryMonth   +"\t"+  " | " + emp.Basic   +"\t"+  " | " + emp.Gross   +"\t"+  " | " + emp.Deduction   +"\t"+  " | " + emp.Net);
+                        }
+                    }
                 }
-
-                Console.WriteLine("Name   | Department  | Designation | JoiningDate  |Basic     | Gross    | Deduction | Net");
-                Console.WriteLine("-------------------------------------------------------------------------------------------");
-
-                while (reader.Read())
-                {
-                    string name = reader["EmpName"].ToString();
-                    string department = reader["Department"].ToString();
-                    string designation = reader["Designation"].ToString();
-                    string joiningDate = Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
-                    decimal basic = Convert.ToDecimal(reader["BasicSalary"]);
-                    decimal gross = Convert.ToDecimal(reader["GrossSalary"]);
-                    decimal deduction = Convert.ToDecimal(reader["Deduction"]);
-                    decimal net = Convert.ToDecimal(reader["Net"]);
-
-                    Console.WriteLine(name + " | " + department + " | " + designation + " | "+ joiningDate + " | " + basic + " | " + gross + " | " + deduction + " | " + net);
-                }
-
-                reader.Close();
             }
             catch (SqlException ex)
             {

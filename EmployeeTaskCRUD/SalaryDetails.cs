@@ -60,7 +60,7 @@ namespace EmployeeTaskCRUD
 
                 int empId = Convert.ToInt32(empInput);
 
-                // Check if employee exists
+               
                 string empQuery = "SELECT EmpName, Designation, Department FROM Employee WHERE EmpID = @EmpID";
                 SqlCommand checkCmd = new SqlCommand(empQuery, con);
                 checkCmd.Parameters.AddWithValue("@EmpID", empId);
@@ -79,7 +79,7 @@ namespace EmployeeTaskCRUD
                 checkReader.Close();
 
                //salary month 
-                Console.Write("Enter Salary Month (dd-MM-yyyy): ");
+                Console.Write("Enter Salary Month (28-MM-yyyy): ");
                 string monthInput = Console.ReadLine();
 
                 if (string.IsNullOrEmpty(monthInput))
@@ -90,7 +90,7 @@ namespace EmployeeTaskCRUD
 
                 DateTime salaryMonth = DateTime.ParseExact(monthInput, "dd-MM-yyyy", null);
 
-                // Check salary is already there or not for that month
+             
                 string duplicateQuery = "SELECT COUNT(*) FROM Salary WHERE EmpID = @EmpID AND MONTH(SalaryMonth) = @Month AND YEAR(SalaryMonth) = @Year";
                 SqlCommand dupCmd = new SqlCommand(duplicateQuery, con);
                 dupCmd.Parameters.AddWithValue("@EmpID", empId);
@@ -151,7 +151,7 @@ namespace EmployeeTaskCRUD
                 double deduction = pf + tax;
                 double netSalary = grossSalary - deduction;
 
-                // Printing the salary
+               
                 Console.WriteLine("\n---------- SALARY DETAILS ----------");
                 Console.WriteLine("  Salary Month    : " + salaryMonth.ToString("dd-MM-yyyy"));
                 Console.WriteLine("  Basic Salary    : Rs. " + basicSalary);
@@ -163,7 +163,7 @@ namespace EmployeeTaskCRUD
                 Console.WriteLine("  Total Deductions: Rs. " + deduction);
                 Console.WriteLine("  NET SALARY      : Rs. " + netSalary);
 
-                // INSERT only — no update
+               
                 string insertQuery = "INSERT INTO Salary(EmpID, BasicSalary, Hra, Da, Pf, Tax, GrossSalary, Deduction, Net, SalaryMonth) " +
                                      "VALUES (@EmpID, @BasicSalary, @Hra, @Da, @Pf, @Tax, @GrossSalary, @Deduction, @Net, @SalaryMonth)";
 
